@@ -1,0 +1,11 @@
+.hh2-2-img {
+	height: 40vh;
+}
+.hh2-3-img {
+	height: 25vh;
+	border: 1px solid black;
+	margin: 1em;
+}
+.hh2-3-img.tall {
+	height: 40vh;
+}
