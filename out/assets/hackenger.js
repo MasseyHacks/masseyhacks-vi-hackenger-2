@@ -1,18 +1,21 @@
 
 $(function () {
+	document.title = document.title + gQuestion;
 	if(Cookies.get('attempted') === undefined){
-		Cookies.set('attempted', 'true', { expires: 7, path: '' });
 		$.post({
 			url: apiBase + '/report',
 			data: JSON.stringify({
-				"namespace": "hackenger2",
-				"question": gQuestion,
-				"state": "loaded"
+				"info": {
+					"namespace": "hackenger2",
+					"question": gQuestion,
+					"state": "loaded"
+				}
 			}),
 			dataType: "json",
 			contentType: "application/json; charset=utf-8",
 			success: function(res){
 				console.log("Session started");
+				Cookies.set('attempted', 'true', { expires: 7, path: '' });
 			},
 			error: function(err){
 				Swal.fire({
@@ -29,7 +32,13 @@ $(function () {
 		$(submitSelector).click(function(e) {
 			e.preventDefault();
 			let answer = $(inputSelector).val();
+			
+			
+			if(valueOverride){
+				answer = valueOverrideFunction();
+			}
 			$(inputSelector).val("");
+			
 			$.post({
 				url: apiBase + '/submit',
 				data: JSON.stringify({
