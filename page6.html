@@ -99,6 +99,11 @@
 				}
 			},
 			error: function(error){
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: 'There was an error fetching your run status.'
+				});
 				console.log(error);
 			}
 		});
@@ -153,6 +158,11 @@
 					}
 				},
 				error: function(err){
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: 'There was an error submitting your run.'
+					});
 					console.log(err);
 				}
 			});

@@ -5,11 +5,12 @@ mapping = {
     3: "douVDHSQG5jp1TQSJs5lpbUoP1U37lfrEhtj4yRTc",
     4: "lfVwEwqk6eceS1Kf3Zzuxkh00ZvSU2PgWGP5Vsjy1",
     5: "mXPp8pIgvYvYzFiAkQ8jhdZbF7NWE8nwL7iftapdE",
-    6: "XjAu2SM7teKLPX8NV6BzHy4ERMXbutSisC2SgCpZo"
+    6: "XjAu2SM7teKLPX8NV6BzHy4ERMXbutSisC2SgCpZo",
+    7: "ZGxKpBWQwwAhBG96zTqodaZKUignhRqC78gNvizKT"
     }
 with open("base.html", encoding="utf8") as b:
     bP = b.read()
-    for i in range(7):
+    for i in range(8):
         with open("page{}.html".format(i), encoding="utf8") as p:
             with open("out/{}.html".format(mapping[i]), "w", encoding="utf8") as o:
                 o.write(bP.replace("{{innerPage}}", p.read()).replace("{{cdnBase}}", ""))
