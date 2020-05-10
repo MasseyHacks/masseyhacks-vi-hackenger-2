@@ -1,7 +1,7 @@
 
 $(function () {
 	document.title = document.title + gQuestion;
-	if(Cookies.get('attempted') === undefined){
+	if(Cookies.get('attempted'+gQuestion) === undefined){
 		$.post({
 			url: apiBase + '/report',
 			data: JSON.stringify({
@@ -15,7 +15,7 @@ $(function () {
 			contentType: "application/json; charset=utf-8",
 			success: function(res){
 				console.log("Session started");
-				Cookies.set('attempted', 'true', { expires: 7, path: '' });
+				Cookies.set('attempted'+gQuestion, 'true', { expires: 7, path: '' });
 			},
 			error: function(err){
 				Swal.fire({
