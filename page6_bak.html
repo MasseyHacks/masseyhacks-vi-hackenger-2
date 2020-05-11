@@ -1,0 +1,173 @@
+<div class="container mt-5 mb-5">
+	<div class="row">
+		<div class="col-6">
+			<h1>Submit Program to Run</h1>
+			<form>
+				<div class="form-group">
+					<label for="teamName">Team Name</label>
+					<input type="text" class="form-control" id="teamName" required>
+					<small id="teamHelp" class="form-text text-muted">Come up with something unique. This will help us better assist you should you run in to problems solving this question.</small>
+				</div>
+				<div class="form-group">
+					<div class="custom-file">
+					  <input type="file" class="custom-file-input" id="submissionFile">
+					  <label class="custom-file-label" for="submissionFile" id="submissionFileDisplay">Choose file</label>
+					</div>
+				</div>
+
+				<button type="submit" class="btn btn-primary" id="hh2-q6-submit" >Submit</button>
+			</form>
+		</div>
+		<div class="col-6">
+			<h1>Run result</h1>
+			<p>Status: <span id="submit-status">No submission</span></p>
+			<p>Submission ID (Support purposes): <span id="submit-id">No submission</span></p>
+			<p>Submission Runtime (s): <span id="submit-runtime">No submission</span></p>
+			<p>Internal Response Status: <span id="submit-intstatus">No submission</span></p>
+			<h3>Standard Output</h3>
+			<textarea class="form-control mb-3" style="width: 100%;" rows="15" id="submit-output" disabled></textarea>
+			<h3 class="mt-2">Error Output</h3>
+			<small>The output of this pane should be blank at ALL times. Errors that are thrown in an expression wrapped with runStatement will be shown in the standard output pane.</small>
+			<textarea class="form-control mt-3" style="width: 100%;" rows="5" id="submit-errors" disabled></textarea>
+		</div>
+	</div>
+	
+</div>
+
+<script>
+	let judgeBase = "https://judgectl.hackenger.online/public";
+	let gQuestion = "6";
+	selectorEnabled = false;
+	
+	let submitID = "";
+	let intervalTimer;
+	
+	function rephraseState(state){
+		switch(state){
+			case "timelimit":
+				return "Your program exceeded the timelimit and was killed. This probably means that you had an infinite loop.";
+			case "memory-limit":
+				return "Your program exceed the 2GB memory limit and was killed.";
+			case "output-limit":
+				return "Your program exceeded the 8MB output limit and was killed.";
+			case "run-error":
+				return "Your program produced an error outside the runStatement scope that was not caught.";
+			case "no-output":
+				return "Your program did the impossible and produced no output even though we inject a print statement at the end of your code. Congrats.";
+			default:
+				return "";
+		}
+	}
+	
+	function updateStatus(){
+		//console.log("updating status");
+		//console.log(judgeBase + "/status/" + submitID);
+		$.get({
+			url: judgeBase + "/status/" + submitID,
+			success: function(result){
+				//console.log(result);
+				if(result.data.error){
+					$('#submit-status').text(result.data.state);
+					$('#submit-output').text(result.data.error);
+				}
+				else if(result.data.state === "Finished"){
+					if(result.data["output_run"]){
+						let origOutput = JSON.parse(result.data["output_run"]);
+						let newOutput = ""
+						for(let line of origOutput){
+							newOutput += line + "\n"
+						}
+						
+						$('#submit-output').text(newOutput);
+					}
+					if(result.data["output_error"]){
+						$('#submit-status').text("Errored");
+						$('#submit-errors').text(result.data["output_error"]);
+					}
+					else{
+						$('#submit-status').text(result.data.state);
+					}
+					
+					$('#submit-intstatus').text(rephraseState(result.data["judge_response"]));
+					$('#submit-runtime').text(result.data["runtime"]);
+					
+					clearInterval(intervalTimer);
+					
+				}
+				else{
+					$('#submit-status').text(result.data.state);
+				}
+			},
+			error: function(error){
+				Swal.fire({
+					icon: 'error',
+					title: 'Error',
+					text: 'There was an error fetching your run status.'
+				});
+				console.log(error);
+			}
+		});
+	}
+	
+	$(function(){
+		$('#submissionFile').on('change', function(e){
+			let file = this.files[0];
+			document.getElementById("submissionFileDisplay").innerText = "Selected file: " + file.name;
+		});
+	
+		$('#hh2-q6-submit').click(function(e){
+			e.preventDefault();
+		
+			let formData = new FormData();
+			formData.append('team', $('#teamName').val());
+			formData.append('program', document.getElementById("submissionFile").files[0]);
+			
+			$.post({
+				url: judgeBase + "/submit",
+				data: formData,
+				processData: false,
+				contentType: false,
+				success: function(result){
+					console.log(result);
+					if(result.status === "OK"){
+						Swal.fire({
+							icon: 'success',
+							title: 'Success!',
+							text: 'Your program has been submitted to be run.'
+						});
+						$('#submit-status').text("Submitted");
+						$('#submit-id').text(result.subID);
+						
+						submitID = result.subID;
+						
+						$("#submissionFile").replaceWith($("#submissionFile").val('').clone(true));
+						$('#submit-output').text("");
+						$('#submit-errors').text("");
+						$('#submit-runtime').text("");
+						$('#submit-intstatus').text("");
+						
+						
+						intervalTimer = setInterval(updateStatus, 1000);
+					}
+					else {
+						Swal.fire({
+							icon: 'error',
+							title: 'Error!',
+							text: result.message
+						});
+					}
+				},
+				error: function(err){
+					Swal.fire({
+						icon: 'error',
+						title: 'Error',
+						text: 'There was an error submitting your run.'
+					});
+					console.log(err);
+				}
+			});
+		});
+	})
+	
+	
+</script>
