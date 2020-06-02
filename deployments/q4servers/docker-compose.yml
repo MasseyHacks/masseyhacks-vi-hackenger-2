@@ -1,0 +1,35 @@
+version: '2.0'
+services:
+  lighttpd:
+    image: sebp/lighttpd
+    container_name: q5-lighttpd
+    volumes:
+      - "./html:/var/www/localhost/htdocs"
+      - "./lightconfig:/etc/lighttpd"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lighttpd.rule=Host(`zi.hackenger.online`)"
+      - "traefik.http.routers.lighttpd.entrypoints=web"
+    networks:
+      - q5-net
+    tty: true      
+    restart: always
+
+  nginx:
+    image: nginx
+    container_name: q5-nginx
+    volumes:
+      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro"
+      - "./html:/usr/share/nginx/html:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.rule=HostRegexp(`{subdomain:z[a-h]}.hackenger.online`) || HostRegexp(`{subdomain:z[j-y]}.hackenger.online`)"
+      - "traefik.http.routers.nginx.entrypoints=web"
+    networks:
+      - q5-net
+    restart: always
+
+networks:
+  q5-net:
+    external:
+      name: hh2-net
