@@ -1,0 +1,60 @@
+version: '3.5'
+services:
+  traefik:
+    image: "traefik:v2.2"
+    container_name: hh-traefik
+    command:
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - hh2-net
+    restart: always
+  hh-management:
+    container_name:  hh-management
+    build: Hackenger-Management-Engine
+    labels:
+      - "traefik.http.routers.api.rule=Host(`traefik.hackenger.online`)"
+      - "traefik.http.routers.api.service=api@internal"
+      - "traefik.http.routers.api.middlewares=auth"
+#      - "traefik.http.middlewares.auth.basicauth.users="
+      - "traefik.enable=true"
+      - "traefik.http.routers.management.rule=Host(`api.hackenger.online`)"
+      - "traefik.http.routers.management.entrypoints=web"
+      - "traefik.http.services.management.loadbalancer.server.port=3000"
+    networks:
+      - hh2-net
+    restart: always
+  hh2-web:
+    container_name: hh2-web
+    build: masseyhacks-vi-hackenger-2
+    volumes:
+      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hh2web.rule=Host(`two.hackenger.online`)"
+      - "traefik.http.routers.hh2web.entrypoints=web"
+    networks:
+      - hh2-net
+  hh-landing:
+    container_name: hh-landing
+    image: nginx:latest
+    volumes:
+      - "./landing:/usr/share/nginx/html:ro"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.landing.rule=Host(`hackenger.online`) || Host(`www.hackenger.online`)"
+      - "traefik.http.routers.landing.entrypoints=web"
+    networks:
+      - hh2-net
+
+networks:
+  hh2-net:
+    external:
+      name: hh2-net
